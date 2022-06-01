@@ -1,13 +1,28 @@
-name: ci
+name: Build and push images
 on:
   push:
     branches:
       - 'main'
+    paths:
+      - "*"
+      - "!README.md"
+      - "!build.rb"
   schedule:
-    - cron: "0 1 * * 0-6"
+    - cron: "0 0 * * 0-6"
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - base: python:latest
+            tag: latest
+          - base: python:3.9
+            tag: 3.9
+          - base: python:3.8
+            tag: 3.8
+          - base: python:3.7
+            tag: 3.7
     steps:
       -
         name: Checkout 
@@ -28,4 +43,6 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/python-pyodbc-jre:latest
+          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/python-pyodbc-jre:${{ matrix.tag }}
+          build-args: |
+            IMAGE=${{ matrix.base }}
